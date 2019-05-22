@@ -73,3 +73,90 @@ const insertAll = async () => {
 
 //1.
 
+const getHeaviest = async () => {
+    let maxWeight = await sequelize
+        .query("SELECT MAX(weight) AS weight FROM pokemon")
+    let result = await sequelize
+        .query(`SELECT name FROM pokemon WHERE weight = ${maxWeight[0][0].weight}`)
+    console.log("The heaviest pokemon is: " + result[0][0].name)
+    return result[0][0].name
+}
+
+// getHeaviest()
+
+
+//2.
+
+const getPokeByType = async type => {
+    let poke = await sequelize
+        .query(`
+            SELECT p.name
+            FROM pokemon AS p, pokemon_type AS t
+            WHERE t.type = "${type}" AND p.type = t.id
+        `)
+    let pokemon = poke[0].map(p => p.name)
+    console.log(pokemon)
+    return pokemon
+}
+
+// getPokeByType("grass")
+
+
+//3.
+
+const getPokeOwners = async pokeName => {
+    let trainers = await sequelize
+        .query(`
+            SELECT t.name
+            FROM pokemon AS p, trainer AS t, pokemon_trainer AS pt
+            WHERE p.name = "${pokeName}" AND p.id = pt.p_id AND t.id = pt.t_id
+        `)
+    let trainerList = trainers[0].map(t => t.name)
+    console.log(trainerList)
+    return trainerList
+}
+
+// getPokeOwners("gengar")
+
+
+//4.
+
+const getOwneredPoke = async trainerName => {
+    let poke = await sequelize
+        .query(`
+            SELECT p.name
+            FROM pokemon AS p, trainer AS t, pokemon_trainer AS pt
+            WHERE t.name = "${trainerName}" AND p.id = pt.p_id AND t.id = pt.t_id
+        `)
+    let pokemon = poke[0].map(t => t.name)
+    console.log(pokemon)
+    return pokemon
+}
+
+// getOwneredPoke("Misty")
+
+
+//5.
+
+const mostOwned = async () => {
+    let pokeIds = await sequelize
+        .query(`
+            SELECT COUNT(p_id), pt.p_id, p.name
+            FROM pokemon_trainer AS pt, pokemon AS p
+            WHERE p.id = pt.p_id
+            GROUP BY pt.p_id
+            ORDER BY COUNT(p_id) DESC
+        `)
+    let maxCount = pokeIds[0][0]["COUNT(p_id)"]
+    pokemon = []
+    for (poke of pokeIds[0]) {
+        if (poke["COUNT(p_id)"] === maxCount) {
+            pokemon.push(poke.name)
+        }
+        else { break }
+    }
+    console.log(pokemon.length > 1 ? pokemon : pokemon[0])
+    return pokemon
+}
+
+// mostOwned()
